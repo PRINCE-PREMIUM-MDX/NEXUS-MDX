@@ -20,7 +20,7 @@
   "author": "Prince",
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=23.0.0"
   },
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
