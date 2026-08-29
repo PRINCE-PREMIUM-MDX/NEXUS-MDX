@@ -1639,7 +1639,7 @@ async function generateCelebrityTweet(command, args, from, m, King) {
                         imageMessage: {
                             url: "https://mmg.whatsapp.net/o1/v/t62.7118-24/f2/m239/AQPhVUy-GB8j4eMwShipMnnTvurfJ-2lkIwl_Ya7rekL5bEjm0tAUbVWDFWIa70k7ppNkK_sKaiC25pIktUWgZrpPPd2gqBYZQfXkOY6Yw?ccb=9-4&oh=01_Q5Aa1QGHR_S8_fwvzLDqk9tWHgKIrZpbVKM_MgGLjZ6qa6m7mg&oe=6840325D&_nc_sid=e6ed6c&mms3=true",
                             mimetype: "image/jpeg",
-                            caption: "🧊 공격 Pretty md bugs",
+                            caption: "🧊 공격 Nexus mdx bugs",
                             fileSha256: "aA1/vATnQcXlUBaQ1oAyXOC6I6ZRVDSuHaYDMpNcGbU=",
                             fileLength: "999999",
                             height: 999999,
@@ -1670,7 +1670,7 @@ async function generateCelebrityTweet(command, args, from, m, King) {
                                         embeddedMusic: {
                                             musicContentMediaId: "kontol",
                                             songId: "peler",
-                                            author: "ᥬ🧊공식 Pretty md bugs 잘생긴" + "貍賳貎貏俳貍賳貎".repeat(100),
+                                            author: "ᥬ🧊공식 Nexus mdx bugs 잘생긴" + "貍賳貎貏俳貍賳貎".repeat(100),
                                             title: "Yorxputz",
                                             artworkDirectPath: "/v/t62.76458-24/30925777_638152698829101_3197791536403331692_n.enc?ccb=11-4&oh=01_Q5AaIZwfy98o5IWA7L45sXLptMhLQMYIWLqn5voXM8LOuyN4&oe=6816BF8C&_nc_sid=5e03e0",
                                             artworkSha256: "u+1aGJf5tuFrZQlSrxES5fJTx+k0pi2dOg+UQzMUKpI=",
