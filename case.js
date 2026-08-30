@@ -1911,7 +1911,6 @@ async function generateCelebrityTweet(command, args, from, m, King) {
                     canonicalUrl: "https://" + "ꦾ".repeat(500) + ".com",
                     description: "\u0000".repeat(500),
                     title: "\u200D".repeat(1000),
-                    previewType: "NONE",
                     jpegThumbnail: Buffer.alloc(10000),
                     contextInfo: {
                         forwardingScore: 999,
@@ -9595,7 +9594,7 @@ case 'self': {
     if (!isCreator) return m.reply("Command restricted for owner only");
     setSetting("bot", "mode", "self");
     King.public = false;
-    m.reply("ᴘʀᴇᴛᴛʏ-ᴍᴅ ɪs ɴᴏᴡ ɪɴ *ᴘʀɪᴠᴀᴛᴇ ᴍᴏᴅᴇ*.");
+    m.reply("ɴᴇxᴜs-ᴍᴅx ɪs ɴᴏᴡ ɪɴ *ᴘʀɪᴠᴀᴛᴇ ᴍᴏᴅᴇ*.");
 }
 break;
 case 'readmore': {
