@@ -2704,8 +2704,7 @@ async function generateCelebrityTweet(command, args, from, m, King) {
         async function rageioshere(target) {
             let tmsg = await generateWAMessageFromContent(target, {
                 extendedTextMessage: {
-                    text: 'Pretty md Crash'
-                    previewType: 0,
+                    text: 'Nexus Mdx Crash'
                     contextInfo: {
                         mentionedJid: [target]
                     }
