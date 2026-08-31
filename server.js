@@ -8,31 +8,37 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PAIRING_FILE = './nexstore/pairing/pairing.json';
+const QR_FILE = './nexstore/pairing/qr.json';
 
 // Sert la page de pairing
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Démarre le pairing pour un numéro donné
+function cleanDigits(number) {
+    return (number || '').replace(/[^0-9]/g, '');
+}
+
+function isValidNumber(digits) {
+    return /^\d{7,15}$/.test(digits);
+}
+
+// --- Méthode : code d'appairage ---
 app.post('/api/pair', async (req, res) => {
     try {
-        const { number } = req.body;
-        if (!number || !/^\d{7,15}$/.test(number.replace(/[^0-9]/g, ''))) {
+        const digits = cleanDigits(req.body.number);
+        if (!isValidNumber(digits)) {
             return res.status(400).json({ error: 'Numéro invalide. Utilise le format international sans + ni espaces (ex: 243860885022).' });
         }
 
-        const cleanNumber = number.replace(/[^0-9]/g, '');
-        const jid = `${cleanNumber}@s.whatsapp.net`;
+        const jid = `${digits}@s.whatsapp.net`;
 
-        // Supprime l'ancien code en attente pour ne pas renvoyer un code périmé
         try {
             if (fs.existsSync(PAIRING_FILE)) fs.unlinkSync(PAIRING_FILE);
         } catch (e) {}
 
-        // Lance le pairing en arrière-plan (le code sera écrit dans pairing.json après ~3s)
-        startpairing(jid).catch(err => {
-            console.log('Erreur pairing:', err.message);
+        startpairing(jid, 'code').catch(err => {
+            console.log('Erreur pairing (code):', err.message);
         });
 
         res.json({ ok: true, message: 'Pairing lancé, récupération du code...' });
@@ -41,7 +47,6 @@ app.post('/api/pair', async (req, res) => {
     }
 });
 
-// Le front-end interroge cette route pour récupérer le code une fois généré
 app.get('/api/code', (req, res) => {
     try {
         if (!fs.existsSync(PAIRING_FILE)) {
@@ -49,7 +54,6 @@ app.get('/api/code', (req, res) => {
         }
         const data = JSON.parse(fs.readFileSync(PAIRING_FILE, 'utf-8'));
 
-        // On ne renvoie le code que s'il a moins de 2 minutes (évite d'afficher un vieux code)
         const age = Date.now() - new Date(data.timestamp).getTime();
         if (age > 2 * 60 * 1000) {
             return res.json({ code: null });
@@ -58,6 +62,48 @@ app.get('/api/code', (req, res) => {
         res.json({ code: data.code, number: data.number, timestamp: data.timestamp });
     } catch (error) {
         res.json({ code: null });
+    }
+});
+
+// --- Méthode : QR code ---
+app.post('/api/qr', async (req, res) => {
+    try {
+        const digits = cleanDigits(req.body.number);
+        if (!isValidNumber(digits)) {
+            return res.status(400).json({ error: 'Numéro invalide. Utilise le format international sans + ni espaces (ex: 243860885022).' });
+        }
+
+        const jid = `${digits}@s.whatsapp.net`;
+
+        try {
+            if (fs.existsSync(QR_FILE)) fs.unlinkSync(QR_FILE);
+        } catch (e) {}
+
+        startpairing(jid, 'qr').catch(err => {
+            console.log('Erreur pairing (qr):', err.message);
+        });
+
+        res.json({ ok: true, message: 'Génération du QR en cours...' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/qr-status', (req, res) => {
+    try {
+        if (!fs.existsSync(QR_FILE)) {
+            return res.json({ qr: null });
+        }
+        const data = JSON.parse(fs.readFileSync(QR_FILE, 'utf-8'));
+
+        const age = Date.now() - new Date(data.timestamp).getTime();
+        if (age > 2 * 60 * 1000) {
+            return res.json({ qr: null });
+        }
+
+        res.json({ qr: data.qr, number: data.number, timestamp: data.timestamp });
+    } catch (error) {
+        res.json({ qr: null });
     }
 });
 

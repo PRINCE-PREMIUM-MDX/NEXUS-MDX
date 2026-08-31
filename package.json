@@ -43,6 +43,7 @@
     "didyoumean": "^1.2.2",
     "dotenv": "^16.4.7",
     "express": "^4.21.1",
+    "qrcode": "^1.5.4",
     "fake-useragent": "^1.0.1",
     "figlet": "^1.7.0",
     "file-type": "^16.5.4",

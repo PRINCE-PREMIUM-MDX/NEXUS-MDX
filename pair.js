@@ -18,6 +18,7 @@ const {
     Boom
 } = require('@hapi/boom')
 const PhoneNumber = require('awesome-phonenumber')
+const QRCode = require('qrcode')
 let phoneNumber = "243860885022";
 const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code");
 const useMobile = process.argv.includes("--mobile");
@@ -102,7 +103,7 @@ function deleteFolderRecursive(folderPath) {
 
 // Session validation function
 async function validateSession(nexusDevNumber) {
-    const sessionPath = `./nexstore/pairing/${princeDevNumber}`;
+    const sessionPath = `./nexstore/pairing/${nexusDevNumber}`;
     const credsPath = path.join(sessionPath, 'creds.json');
     
     if (!fs.existsSync(credsPath)) {
@@ -127,7 +128,7 @@ async function validateSession(nexusDevNumber) {
 
 // Force cleanup function
 function forceCleanupSession(nexusDevNumber) {
-    const sessionPath = `./nexstore/pairing/${princeDevNumber}`;
+    const sessionPath = `./nexstore/pairing/${nexusDevNumber}`;
     
     try {
         if (fs.existsSync(sessionPath)) {
@@ -136,8 +137,8 @@ function forceCleanupSession(nexusDevNumber) {
         }
         
         // Remove from tracker
-        if (rentbotTracker.has(princeDevNumber)) {
-            const tracker = rentbotTracker.get(princeDevNumber);
+        if (rentbotTracker.has(nexusDevNumber)) {
+            const tracker = rentbotTracker.get(nexusDevNumber);
             if (tracker.connection) {
                 try {
                     tracker.connection.end();
@@ -202,7 +203,7 @@ function ensureDirectoryExists(dirPath) {
     }
 }
 
-async function startpairing(princeDevNumber) {
+async function startpairing(princeDevNumber, method = 'code') {
     // Ensure base directory exists
     ensureDirectoryExists('./nexstore/pairing');
     
@@ -261,7 +262,7 @@ async function startpairing(princeDevNumber) {
     
     if (store) store.bind(nexus.ev);
 
-    if (pairingCode && !state.creds.registered) {
+    if (method === 'code' && pairingCode && !state.creds.registered) {
         if (useMobile) {
             throw new Error('Cannot use pairing code with mobile API');
         }
@@ -529,10 +530,27 @@ async function startpairing(princeDevNumber) {
 
     // Enhanced connection.update handler
     nexus.ev.on("connection.update", async (update) => {
-        const { connection, lastDisconnect } = update;
+        const { connection, lastDisconnect, qr } = update;
+
+        if (qr && method === 'qr') {
+            try {
+                const qrDataUrl = await QRCode.toDataURL(qr);
+                ensureDirectoryExists('./nexstore/pairing');
+                fs.writeFileSync(
+                    './nexstore/pairing/qr.json',
+                    JSON.stringify({ qr: qrDataUrl, number: princeDevNumber, timestamp: new Date().toISOString() }, null, 2),
+                    'utf8'
+                );
+                console.log(chalk.green(`✓ QR code generated for ${princeDevNumber}`));
+            } catch (e) {
+                console.log(chalk.red(`❌ QR generation error: ${e.message}`));
+            }
+        }
+
         const tracker = rentbotTracker.get(princeDevNumber);
 
         if (connection === "close") {
+          try {
             let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
             console.log(chalk.yellow(`🔌 Connection closed for ${princeDevNumber}, reason: ${reason}`));
 
@@ -589,6 +607,9 @@ async function startpairing(princeDevNumber) {
                     tracker.disconnected = true;
                 }
             }
+          } catch (e) {
+            console.log(chalk.red(`❌ Error handling disconnect for ${princeDevNumber}: ${e.message}`));
+          }
         } else if (connection === "open") {
             console.log(chalk.bgGreen.black(`✅ Connected: ${princeDevNumber}`));
             tracker.retryCount = 0;
