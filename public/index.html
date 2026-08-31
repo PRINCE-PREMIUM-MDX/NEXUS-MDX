@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS-MDX Pairing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg-grid: rgba(94, 234, 212, 0.05);
+    --panel: #121933;
+    --panel-raised: #171f42;
+    --edge: #26314f;
+    --edge-soft: #1c2544;
+    --text: #eaf0fb;
+    --text-muted: #8996b8;
+    --signal: #5eead4;
+    --signal-dim: rgba(94, 234, 212, 0.15);
+    --code: #ffc24b;
+    --code-dim: rgba(255, 194, 75, 0.12);
+    --danger: #fb7185;
+    --danger-dim: rgba(251, 113, 133, 0.12);
+    --font-ui: 'Space Grotesk', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  body {
+    font-family: var(--font-ui);
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(94, 234, 212, 0.08), transparent 60%),
+      linear-gradient(var(--bg-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+    background-size: auto, 28px 28px, 28px 28px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .console {
+    width: 100%;
+    max-width: 420px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+  }
+
+  .console__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--edge);
+    background: var(--panel-raised);
+  }
+
+  .console__title {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+
+  .console__title span { color: var(--signal); }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--signal);
+    border: 1px solid var(--edge);
+    border-radius: 100px;
+    padding: 2px 8px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .console__status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--signal);
+    box-shadow: 0 0 8px var(--signal);
+  }
+
+  .console__body {
+    padding: 28px 22px 24px;
+  }
+
+  h1 {
+    font-size: 21px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 6px;
+  }
+
+  .lede {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0 0 24px;
+    max-width: 34ch;
+  }
+
+  /* --- Signal ring (waiting state) --- */
+  .stage {
+    position: relative;
+    height: 148px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+  }
+
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--signal);
+    opacity: 0;
+  }
+
+  .stage.is-waiting .ring {
+    animation: pulse 2.4s ease-out infinite;
+  }
+  .stage.is-waiting .ring:nth-child(1) { animation-delay: 0s; }
+  .stage.is-waiting .ring:nth-child(2) { animation-delay: 0.8s; }
+  .stage.is-waiting .ring:nth-child(3) { animation-delay: 1.6s; }
+
+  @keyframes pulse {
+    0%   { width: 24px; height: 24px; opacity: 0.9; }
+    100% { width: 148px; height: 148px; opacity: 0; }
+  }
+
+  .stage__core {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--signal);
+    box-shadow: 0 0 20px var(--signal);
+    z-index: 1;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  .stage.is-idle .stage__core {
+    background: var(--edge);
+    box-shadow: none;
+  }
+
+  .stage.is-code .stage__core {
+    background: var(--code);
+    box-shadow: 0 0 24px var(--code);
+    width: 18px;
+    height: 18px;
+  }
+
+  /* --- Form --- */
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+  }
+
+  .field-input {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--edge);
+    border-radius: 10px;
+    background: var(--bg);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .field-input:focus-within {
+    border-color: var(--signal);
+  }
+
+  .field-input__prefix {
+    padding: 0 0 0 14px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 15px;
+  }
+
+  input[type="tel"] {
+    flex: 1;
+    padding: 13px 14px 13px 6px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    min-width: 0;
+  }
+
+  input[type="tel"]:focus { outline: none; }
+
+  .hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 8px 0 20px;
+  }
+
+  button.primary {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    background: var(--signal);
+    color: #08221d;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+  }
+
+  button.primary:hover { filter: brightness(1.08); }
+  button.primary:active { transform: scale(0.98); }
+
+  button.primary:disabled {
+    background: var(--edge);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  .message {
+    margin-top: 12px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    display: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+
+  .message.show { display: block; }
+  .message.is-error {
+    background: var(--danger-dim);
+    color: var(--danger);
+  }
+  .message.is-info {
+    background: var(--signal-dim);
+    color: var(--signal);
+  }
+
+  /* --- Code reveal --- */
+  .code-panel {
+    display: none;
+  }
+  .code-panel.show { display: block; }
+
+  .code-panel__label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .code-panel__timer {
+    font-family: var(--font-mono);
+    color: var(--code);
+  }
+
+  .code-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--code-dim);
+    border: 1px dashed var(--code);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+  }
+
+  .code-display__value {
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--code);
+  }
+
+  .copy-btn {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--code);
+    color: var(--code);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .copy-btn:hover { background: var(--code-dim); }
+  .copy-btn.copied { background: var(--code); color: #2b1c00; }
+
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+  }
+
+  .steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 12px;
+    padding: 9px 0;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--edge-soft);
+  }
+  .steps li:first-child { border-top: none; }
+
+  .steps li::before {
+    content: counter(step);
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--panel-raised);
+    border: 1px solid var(--edge);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .retry-row {
+    margin-top: 18px;
+    display: none;
+  }
+  .retry-row.show { display: block; }
+
+  button.ghost {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--edge);
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button.ghost:hover { border-color: var(--signal); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage.is-waiting .ring { animation: none; opacity: 0.3; width: 90px; height: 90px; }
+  }
+
+  .console__footer {
+    padding: 14px 22px;
+    border-top: 1px solid var(--edge);
+    background: var(--panel-raised);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .owner {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .owner__name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .owner__number {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<div class="console">
+  <div class="console__header">
+    <div class="console__title">NEXUS-<span>MDX</span> <span class="badge">Pairing</span></div>
+    <div class="console__status"><span class="dot"></span>console de liaison</div>
+  </div>
+
+  <div class="console__body">
+    <h1>Lier WhatsApp au bot</h1>
+    <p class="lede">Indique le numéro sur lequel le bot doit tourner. Un code à usage unique est généré pour l'appareil lié.</p>
+
+    <div class="stage is-idle" id="stage">
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="stage__core"></div>
+    </div>
+
+    <form id="pairForm">
+      <div class="field">
+        <label for="numberInput">Numéro WhatsApp</label>
+        <div class="field-input">
+          <span class="field-input__prefix">+</span>
+          <input type="tel" id="numberInput" inputmode="numeric" placeholder="243860885022" autocomplete="off" />
+        </div>
+      </div>
+      <p class="hint">Indicatif pays inclus, sans espace ni symbole.</p>
+      <button type="submit" class="primary" id="pairBtn">Générer le code</button>
+      <div class="message" id="message"></div>
+    </form>
+
+    <div class="code-panel" id="codePanel">
+      <div class="code-panel__label">
+        <span>Code d'appairage</span>
+        <span class="code-panel__timer" id="timer">60s</span>
+      </div>
+      <div class="code-display">
+        <span class="code-display__value" id="codeValue">----</span>
+        <button class="copy-btn" id="copyBtn">Copier</button>
+      </div>
+
+      <ol class="steps">
+        <li>Ouvre WhatsApp sur ton téléphone</li>
+        <li>Va dans Paramètres → Appareils liés</li>
+        <li>Appuie sur Lier un appareil</li>
+        <li>Choisis « Lier avec un numéro de téléphone »</li>
+        <li>Entre le code ci-dessus</li>
+      </ol>
+
+      <div class="retry-row" id="retryRow">
+        <button class="ghost" id="retryBtn">Générer un nouveau code</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="console__footer">
+    <div class="owner">
+      <span class="owner__name">Opéré par Prince Premium</span>
+      <span class="owner__number">+243 860 885 022</span>
+    </div>
+    <span class="dot"></span>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('pairForm');
+const numberInput = document.getElementById('numberInput');
+const pairBtn = document.getElementById('pairBtn');
+const message = document.getElementById('message');
+const stage = document.getElementById('stage');
+const codePanel = document.getElementById('codePanel');
+const codeValue = document.getElementById('codeValue');
+const copyBtn = document.getElementById('copyBtn');
+const timerEl = document.getElementById('timer');
+const retryRow = document.getElementById('retryRow');
+const retryBtn = document.getElementById('retryBtn');
+
+const CODE_LIFETIME = 60; // secondes, durée de validité typique d'un code d'appairage
+let pollHandle = null;
+let countdownHandle = null;
+
+function showMessage(text, type) {
+  message.textContent = text;
+  message.className = 'message show is-' + type;
+}
+
+function clearMessage() {
+  message.className = 'message';
+}
+
+function setStage(state) {
+  stage.className = 'stage is-' + state;
+}
+
+function stopPolling() {
+  if (pollHandle) { clearInterval(pollHandle); pollHandle = null; }
+}
+
+function stopCountdown() {
+  if (countdownHandle) { clearInterval(countdownHandle); countdownHandle = null; }
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const raw = numberInput.value.trim();
+  const digits = raw.replace(/[^0-9]/g, '');
+
+  clearMessage();
+
+  if (digits.length < 7 || digits.length > 15) {
+    showMessage('Numéro invalide : indicatif pays + numéro, chiffres uniquement.', 'error');
+    return;
+  }
+
+  pairBtn.disabled = true;
+  pairBtn.textContent = 'Connexion en cours…';
+  codePanel.classList.remove('show');
+  retryRow.classList.remove('show');
+  setStage('waiting');
+  showMessage('Recherche du signal…', 'info');
+
+  try {
+    const res = await fetch('/api/pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: digits })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showMessage(data.error || 'Erreur inconnue.', 'error');
+      resetButton();
+      setStage('idle');
+      return;
+    }
+
+    stopPolling();
+    pollHandle = setInterval(pollForCode, 1800);
+  } catch (err) {
+    showMessage('Connexion au serveur impossible. Réessaie.', 'error');
+    resetButton();
+    setStage('idle');
+  }
+});
+
+async function pollForCode() {
+  try {
+    const res = await fetch('/api/code');
+    const data = await res.json();
+    if (data.code) {
+      stopPolling();
+      revealCode(data.code, data.timestamp);
+    }
+  } catch (err) {
+    // silencieux, on continue de sonder
+  }
+}
+
+function revealCode(code, timestamp) {
+  setStage('code');
+  clearMessage();
+  codeValue.textContent = code;
+  codePanel.classList.add('show');
+  resetButton();
+
+  const genTime = timestamp ? new Date(timestamp).getTime() : Date.now();
+  startCountdown(genTime);
+}
+
+function startCountdown(genTime) {
+  stopCountdown();
+  retryRow.classList.remove('show');
+
+  function tick() {
+    const elapsed = Math.floor((Date.now() - genTime) / 1000);
+    const remaining = CODE_LIFETIME - elapsed;
+
+    if (remaining <= 0) {
+      timerEl.textContent = 'expiré';
+      stopCountdown();
+      retryRow.classList.add('show');
+      showMessage('Ce code a expiré. Génère-en un nouveau.', 'error');
+      return;
+    }
+    timerEl.textContent = remaining + 's';
+  }
+
+  tick();
+  countdownHandle = setInterval(tick, 1000);
+}
+
+function resetButton() {
+  pairBtn.disabled = false;
+  pairBtn.textContent = 'Générer le code';
+}
+
+retryBtn.addEventListener('click', () => {
+  form.requestSubmit();
+});
+
+copyBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(codeValue.textContent);
+    copyBtn.textContent = 'Copié ✓';
+    copyBtn.classList.add('copied');
+    setTimeout(() => {
+      copyBtn.textContent = 'Copier';
+      copyBtn.classList.remove('copied');
+    }, 1800);
+  } catch (err) {
+    showMessage('Copie impossible, sélectionne le code manuellement.', 'error');
+  }
+});
+</script>
+
+</body>
+</html>
