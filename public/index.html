@@ -2,27 +2,27 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>NEXUS-MDX Pairing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0b1020;
-    --bg-grid: rgba(94, 234, 212, 0.05);
-    --panel: #121933;
-    --panel-raised: #171f42;
-    --edge: #26314f;
-    --edge-soft: #1c2544;
-    --text: #eaf0fb;
-    --text-muted: #8996b8;
-    --signal: #5eead4;
-    --signal-dim: rgba(94, 234, 212, 0.15);
-    --code: #ffc24b;
-    --code-dim: rgba(255, 194, 75, 0.12);
-    --danger: #fb7185;
-    --danger-dim: rgba(251, 113, 133, 0.12);
+    --bg: #100404;
+    --bg-grid: rgba(255, 69, 69, 0.06);
+    --panel: #1a0707;
+    --panel-raised: #220909;
+    --edge: #3d1515;
+    --edge-soft: #2a0f0f;
+    --text: #fbeaea;
+    --text-muted: #b98f8f;
+    --signal: #ff4747;
+    --signal-dim: rgba(255, 71, 71, 0.15);
+    --code: #ff9142;
+    --code-dim: rgba(255, 145, 66, 0.12);
+    --danger: #ff5c8a;
+    --danger-dim: rgba(255, 92, 138, 0.12);
     --font-ui: 'Space Grotesk', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
   }
@@ -31,46 +31,66 @@
 
   html, body {
     margin: 0;
-    min-height: 100vh;
+    height: 100%;
   }
 
   body {
     font-family: var(--font-ui);
     background-color: var(--bg);
     background-image:
-      radial-gradient(circle at 50% 0%, rgba(94, 234, 212, 0.08), transparent 60%),
+      radial-gradient(circle at 50% 0%, rgba(255, 71, 71, 0.1), transparent 60%),
       linear-gradient(var(--bg-grid) 1px, transparent 1px),
       linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
     background-size: auto, 28px 28px, 28px 28px;
     color: var(--text);
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 32px 16px;
   }
 
   .console {
     width: 100%;
-    max-width: 420px;
+    min-height: 100dvh;
+    max-width: 460px;
     background: var(--panel);
-    border: 1px solid var(--edge);
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  @media (min-width: 560px) {
+    .console {
+      min-height: 92dvh;
+      margin: 16px 0;
+      border: 1px solid var(--edge);
+      border-radius: 22px;
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+    }
   }
 
   .console__header {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: 18px 22px;
+    padding: 26px 22px 18px;
     border-bottom: 1px solid var(--edge);
     background: var(--panel-raised);
   }
 
+  .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--signal);
+    box-shadow: 0 0 18px rgba(255, 71, 71, 0.5);
+    margin-bottom: 12px;
+  }
+
   .console__title {
     font-weight: 600;
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.02em;
   }
 
@@ -96,6 +116,7 @@
     font-family: var(--font-mono);
     font-size: 11px;
     color: var(--text-muted);
+    margin-top: 8px;
   }
 
   .dot {
@@ -107,76 +128,61 @@
   }
 
   .console__body {
-    padding: 28px 22px 24px;
+    padding: 22px 22px 24px;
+    flex: 1;
   }
 
   h1 {
-    font-size: 21px;
+    font-size: 20px;
     font-weight: 600;
     line-height: 1.3;
     margin: 0 0 6px;
+    text-align: center;
   }
 
   .lede {
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--text-muted);
     line-height: 1.5;
-    margin: 0 0 24px;
+    margin: 0 auto 22px;
     max-width: 34ch;
+    text-align: center;
   }
 
-  /* --- Signal ring (waiting state) --- */
-  .stage {
-    position: relative;
-    height: 148px;
+  /* --- Tabs --- */
+  .tabs {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    background: var(--bg);
+    border: 1px solid var(--edge);
+    border-radius: 10px;
+    padding: 3px;
     margin-bottom: 22px;
   }
 
-  .ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 1px solid var(--signal);
-    opacity: 0;
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
   }
 
-  .stage.is-waiting .ring {
-    animation: pulse 2.4s ease-out infinite;
-  }
-  .stage.is-waiting .ring:nth-child(1) { animation-delay: 0s; }
-  .stage.is-waiting .ring:nth-child(2) { animation-delay: 0.8s; }
-  .stage.is-waiting .ring:nth-child(3) { animation-delay: 1.6s; }
-
-  @keyframes pulse {
-    0%   { width: 24px; height: 24px; opacity: 0.9; }
-    100% { width: 148px; height: 148px; opacity: 0; }
-  }
-
-  .stage__core {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
+  .tab.active {
     background: var(--signal);
-    box-shadow: 0 0 20px var(--signal);
-    z-index: 1;
-    transition: background 0.3s, box-shadow 0.3s;
+    color: #2a0505;
   }
 
-  .stage.is-idle .stage__core {
-    background: var(--edge);
-    box-shadow: none;
-  }
+  .panel { display: none; }
+  .panel.active { display: block; }
 
-  .stage.is-code .stage__core {
-    background: var(--code);
-    box-shadow: 0 0 24px var(--code);
-    width: 18px;
-    height: 18px;
-  }
-
-  /* --- Form --- */
+  /* --- Shared number field --- */
   .field {
     margin-bottom: 14px;
   }
@@ -234,7 +240,7 @@
     border-radius: 10px;
     border: none;
     background: var(--signal);
-    color: #08221d;
+    color: #2a0505;
     font-family: var(--font-ui);
     font-weight: 600;
     font-size: 15px;
@@ -270,10 +276,59 @@
     color: var(--signal);
   }
 
-  /* --- Code reveal --- */
-  .code-panel {
-    display: none;
+  /* --- Stage (pulse ring for code tab) --- */
+  .stage {
+    position: relative;
+    height: 128px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
   }
+
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--signal);
+    opacity: 0;
+  }
+
+  .stage.is-waiting .ring {
+    animation: pulse 2.4s ease-out infinite;
+  }
+  .stage.is-waiting .ring:nth-child(1) { animation-delay: 0s; }
+  .stage.is-waiting .ring:nth-child(2) { animation-delay: 0.8s; }
+  .stage.is-waiting .ring:nth-child(3) { animation-delay: 1.6s; }
+
+  @keyframes pulse {
+    0%   { width: 24px; height: 24px; opacity: 0.9; }
+    100% { width: 128px; height: 128px; opacity: 0; }
+  }
+
+  .stage__core {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--signal);
+    box-shadow: 0 0 20px var(--signal);
+    z-index: 1;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  .stage.is-idle .stage__core {
+    background: var(--edge);
+    box-shadow: none;
+  }
+
+  .stage.is-code .stage__core {
+    background: var(--code);
+    box-shadow: 0 0 24px var(--code);
+    width: 18px;
+    height: 18px;
+  }
+
+  /* --- Code reveal --- */
+  .code-panel { display: none; }
   .code-panel.show { display: block; }
 
   .code-panel__label {
@@ -304,7 +359,7 @@
 
   .code-display__value {
     font-family: var(--font-mono);
-    font-size: 26px;
+    font-size: 25px;
     font-weight: 600;
     letter-spacing: 0.06em;
     color: var(--code);
@@ -324,7 +379,46 @@
     transition: background 0.15s;
   }
   .copy-btn:hover { background: var(--code-dim); }
-  .copy-btn.copied { background: var(--code); color: #2b1c00; }
+  .copy-btn.copied { background: var(--code); color: #2b1500; }
+
+  /* --- QR panel --- */
+  .qr-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .qr-frame {
+    width: 220px;
+    height: 220px;
+    background: var(--bg);
+    border: 1px solid var(--edge);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .qr-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .qr-frame .stage {
+    margin-bottom: 0;
+    height: auto;
+  }
+
+  .qr-timer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--code);
+    margin-bottom: 18px;
+  }
 
   .steps {
     list-style: none;
@@ -360,10 +454,7 @@
     justify-content: center;
   }
 
-  .retry-row {
-    margin-top: 18px;
-    display: none;
-  }
+  .retry-row { margin-top: 18px; display: none; }
   .retry-row.show { display: block; }
 
   button.ghost {
@@ -379,10 +470,6 @@
   }
   button.ghost:hover { border-color: var(--signal); }
 
-  @media (prefers-reduced-motion: reduce) {
-    .stage.is-waiting .ring { animation: none; opacity: 0.3; width: 90px; height: 90px; }
-  }
-
   .console__footer {
     padding: 14px 22px;
     border-top: 1px solid var(--edge);
@@ -392,22 +479,12 @@
     justify-content: space-between;
   }
 
-  .owner {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
+  .owner { display: flex; flex-direction: column; gap: 2px; }
+  .owner__name { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  .owner__number { font-family: var(--font-mono); font-size: 12px; color: var(--text); }
 
-  .owner__name {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-muted);
-  }
-
-  .owner__number {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text);
+  @media (prefers-reduced-motion: reduce) {
+    .stage.is-waiting .ring { animation: none; opacity: 0.3; width: 80px; height: 80px; }
   }
 </style>
 </head>
@@ -415,54 +492,91 @@
 
 <div class="console">
   <div class="console__header">
+    <img class="avatar" src="https://files.catbox.moe/qsa3b9.jpg" alt="NEXUS-MDX" />
     <div class="console__title">NEXUS-<span>MDX</span> <span class="badge">Pairing</span></div>
     <div class="console__status"><span class="dot"></span>console de liaison</div>
   </div>
 
   <div class="console__body">
     <h1>Lier WhatsApp au bot</h1>
-    <p class="lede">Indique le numéro sur lequel le bot doit tourner. Un code à usage unique est généré pour l'appareil lié.</p>
+    <p class="lede">Choisis une méthode et indique le numéro sur lequel le bot doit tourner.</p>
 
-    <div class="stage is-idle" id="stage">
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="stage__core"></div>
+    <div class="tabs">
+      <button class="tab active" id="tabCode" data-tab="code">Code de liaison</button>
+      <button class="tab" id="tabQr" data-tab="qr">QR Code</button>
     </div>
 
-    <form id="pairForm">
-      <div class="field">
-        <label for="numberInput">Numéro WhatsApp</label>
-        <div class="field-input">
-          <span class="field-input__prefix">+</span>
-          <input type="tel" id="numberInput" inputmode="numeric" placeholder="243860885022" autocomplete="off" />
-        </div>
+    <div class="field">
+      <label for="numberInput">Numéro WhatsApp</label>
+      <div class="field-input">
+        <span class="field-input__prefix">+</span>
+        <input type="tel" id="numberInput" inputmode="numeric" placeholder="243860885022" autocomplete="off" />
       </div>
       <p class="hint">Indicatif pays inclus, sans espace ni symbole.</p>
-      <button type="submit" class="primary" id="pairBtn">Générer le code</button>
-      <div class="message" id="message"></div>
-    </form>
+    </div>
 
-    <div class="code-panel" id="codePanel">
-      <div class="code-panel__label">
-        <span>Code d'appairage</span>
-        <span class="code-panel__timer" id="timer">60s</span>
-      </div>
-      <div class="code-display">
-        <span class="code-display__value" id="codeValue">----</span>
-        <button class="copy-btn" id="copyBtn">Copier</button>
+    <!-- Panneau : Code de liaison -->
+    <div class="panel active" id="panelCode">
+      <div class="stage is-idle" id="stageCode">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="stage__core"></div>
       </div>
 
-      <ol class="steps">
+      <button type="button" class="primary" id="pairBtn">Générer le code</button>
+      <div class="message" id="codeMessage"></div>
+
+      <div class="code-panel" id="codePanel">
+        <div class="code-panel__label">
+          <span>Code d'appairage</span>
+          <span class="code-panel__timer" id="codeTimer">60s</span>
+        </div>
+        <div class="code-display">
+          <span class="code-display__value" id="codeValue">----</span>
+          <button class="copy-btn" id="copyBtn">Copier</button>
+        </div>
+
+        <ol class="steps">
+          <li>Ouvre WhatsApp sur ton téléphone</li>
+          <li>Va dans Paramètres → Appareils liés</li>
+          <li>Appuie sur Lier un appareil</li>
+          <li>Choisis « Lier avec un numéro de téléphone »</li>
+          <li>Entre le code ci-dessus</li>
+        </ol>
+
+        <div class="retry-row" id="codeRetryRow">
+          <button class="ghost" id="codeRetryBtn">Générer un nouveau code</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panneau : QR Code -->
+    <div class="panel" id="panelQr">
+      <div class="qr-stage">
+        <div class="qr-frame" id="qrFrame">
+          <div class="stage is-idle" id="stageQr">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="stage__core"></div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="primary" id="qrBtn">Générer le QR code</button>
+      <div class="message" id="qrMessage"></div>
+      <div class="qr-timer" id="qrTimer" style="display:none; text-align:center;"></div>
+
+      <ol class="steps" style="margin-top: 16px;">
         <li>Ouvre WhatsApp sur ton téléphone</li>
         <li>Va dans Paramètres → Appareils liés</li>
         <li>Appuie sur Lier un appareil</li>
-        <li>Choisis « Lier avec un numéro de téléphone »</li>
-        <li>Entre le code ci-dessus</li>
+        <li>Scanne ce QR code</li>
       </ol>
 
-      <div class="retry-row" id="retryRow">
-        <button class="ghost" id="retryBtn">Générer un nouveau code</button>
+      <div class="retry-row" id="qrRetryRow">
+        <button class="ghost" id="qrRetryBtn">Générer un nouveau QR code</button>
       </div>
     </div>
   </div>
@@ -477,61 +591,60 @@
 </div>
 
 <script>
-const form = document.getElementById('pairForm');
 const numberInput = document.getElementById('numberInput');
+
+// --- Tabs ---
+const tabs = document.querySelectorAll('.tab');
+const panels = { code: document.getElementById('panelCode'), qr: document.getElementById('panelQr') };
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    Object.values(panels).forEach(p => p.classList.remove('active'));
+    panels[tab.dataset.tab].classList.add('active');
+  });
+});
+
+function getDigits() {
+  return numberInput.value.trim().replace(/[^0-9]/g, '');
+}
+
+/* ================= CODE DE LIAISON ================= */
 const pairBtn = document.getElementById('pairBtn');
-const message = document.getElementById('message');
-const stage = document.getElementById('stage');
+const codeMessage = document.getElementById('codeMessage');
+const stageCode = document.getElementById('stageCode');
 const codePanel = document.getElementById('codePanel');
 const codeValue = document.getElementById('codeValue');
 const copyBtn = document.getElementById('copyBtn');
-const timerEl = document.getElementById('timer');
-const retryRow = document.getElementById('retryRow');
-const retryBtn = document.getElementById('retryBtn');
+const codeTimer = document.getElementById('codeTimer');
+const codeRetryRow = document.getElementById('codeRetryRow');
+const codeRetryBtn = document.getElementById('codeRetryBtn');
 
-const CODE_LIFETIME = 60; // secondes, durée de validité typique d'un code d'appairage
-let pollHandle = null;
-let countdownHandle = null;
+const CODE_LIFETIME = 60;
+let codePollHandle = null;
+let codeCountdownHandle = null;
 
-function showMessage(text, type) {
-  message.textContent = text;
-  message.className = 'message show is-' + type;
+function showMsg(el, text, type) {
+  el.textContent = text;
+  el.className = 'message show is-' + type;
 }
+function clearMsg(el) { el.className = 'message'; }
 
-function clearMessage() {
-  message.className = 'message';
-}
-
-function setStage(state) {
-  stage.className = 'stage is-' + state;
-}
-
-function stopPolling() {
-  if (pollHandle) { clearInterval(pollHandle); pollHandle = null; }
-}
-
-function stopCountdown() {
-  if (countdownHandle) { clearInterval(countdownHandle); countdownHandle = null; }
-}
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const raw = numberInput.value.trim();
-  const digits = raw.replace(/[^0-9]/g, '');
-
-  clearMessage();
+pairBtn.addEventListener('click', async () => {
+  const digits = getDigits();
+  clearMsg(codeMessage);
 
   if (digits.length < 7 || digits.length > 15) {
-    showMessage('Numéro invalide : indicatif pays + numéro, chiffres uniquement.', 'error');
+    showMsg(codeMessage, 'Numéro invalide : indicatif pays + numéro, chiffres uniquement.', 'error');
     return;
   }
 
   pairBtn.disabled = true;
   pairBtn.textContent = 'Connexion en cours…';
   codePanel.classList.remove('show');
-  retryRow.classList.remove('show');
-  setStage('waiting');
-  showMessage('Recherche du signal…', 'info');
+  codeRetryRow.classList.remove('show');
+  stageCode.className = 'stage is-waiting';
+  showMsg(codeMessage, 'Recherche du signal…', 'info');
 
   try {
     const res = await fetch('/api/pair', {
@@ -542,18 +655,18 @@ form.addEventListener('submit', async (e) => {
     const data = await res.json();
 
     if (!res.ok) {
-      showMessage(data.error || 'Erreur inconnue.', 'error');
-      resetButton();
-      setStage('idle');
+      showMsg(codeMessage, data.error || 'Erreur inconnue.', 'error');
+      resetPairBtn();
+      stageCode.className = 'stage is-idle';
       return;
     }
 
-    stopPolling();
-    pollHandle = setInterval(pollForCode, 1800);
+    if (codePollHandle) clearInterval(codePollHandle);
+    codePollHandle = setInterval(pollForCode, 1800);
   } catch (err) {
-    showMessage('Connexion au serveur impossible. Réessaie.', 'error');
-    resetButton();
-    setStage('idle');
+    showMsg(codeMessage, 'Connexion au serveur impossible. Réessaie.', 'error');
+    resetPairBtn();
+    stageCode.className = 'stage is-idle';
   }
 });
 
@@ -562,55 +675,49 @@ async function pollForCode() {
     const res = await fetch('/api/code');
     const data = await res.json();
     if (data.code) {
-      stopPolling();
+      clearInterval(codePollHandle);
       revealCode(data.code, data.timestamp);
     }
-  } catch (err) {
-    // silencieux, on continue de sonder
-  }
+  } catch (err) {}
 }
 
 function revealCode(code, timestamp) {
-  setStage('code');
-  clearMessage();
+  stageCode.className = 'stage is-code';
+  clearMsg(codeMessage);
   codeValue.textContent = code;
   codePanel.classList.add('show');
-  resetButton();
+  resetPairBtn();
 
   const genTime = timestamp ? new Date(timestamp).getTime() : Date.now();
-  startCountdown(genTime);
+  startCodeCountdown(genTime);
 }
 
-function startCountdown(genTime) {
-  stopCountdown();
-  retryRow.classList.remove('show');
+function startCodeCountdown(genTime) {
+  if (codeCountdownHandle) clearInterval(codeCountdownHandle);
+  codeRetryRow.classList.remove('show');
 
   function tick() {
     const elapsed = Math.floor((Date.now() - genTime) / 1000);
     const remaining = CODE_LIFETIME - elapsed;
-
     if (remaining <= 0) {
-      timerEl.textContent = 'expiré';
-      stopCountdown();
-      retryRow.classList.add('show');
-      showMessage('Ce code a expiré. Génère-en un nouveau.', 'error');
+      codeTimer.textContent = 'expiré';
+      clearInterval(codeCountdownHandle);
+      codeRetryRow.classList.add('show');
+      showMsg(codeMessage, 'Ce code a expiré. Génère-en un nouveau.', 'error');
       return;
     }
-    timerEl.textContent = remaining + 's';
+    codeTimer.textContent = remaining + 's';
   }
-
   tick();
-  countdownHandle = setInterval(tick, 1000);
+  codeCountdownHandle = setInterval(tick, 1000);
 }
 
-function resetButton() {
+function resetPairBtn() {
   pairBtn.disabled = false;
   pairBtn.textContent = 'Générer le code';
 }
 
-retryBtn.addEventListener('click', () => {
-  form.requestSubmit();
-});
+codeRetryBtn.addEventListener('click', () => pairBtn.click());
 
 copyBtn.addEventListener('click', async () => {
   try {
@@ -622,9 +729,115 @@ copyBtn.addEventListener('click', async () => {
       copyBtn.classList.remove('copied');
     }, 1800);
   } catch (err) {
-    showMessage('Copie impossible, sélectionne le code manuellement.', 'error');
+    showMsg(codeMessage, 'Copie impossible, sélectionne le code manuellement.', 'error');
   }
 });
+
+/* ================= QR CODE ================= */
+const qrBtn = document.getElementById('qrBtn');
+const qrMessage = document.getElementById('qrMessage');
+const stageQr = document.getElementById('stageQr');
+const qrFrame = document.getElementById('qrFrame');
+const qrTimer = document.getElementById('qrTimer');
+const qrRetryRow = document.getElementById('qrRetryRow');
+const qrRetryBtn = document.getElementById('qrRetryBtn');
+
+const QR_LIFETIME = 60;
+let qrPollHandle = null;
+let qrCountdownHandle = null;
+
+qrBtn.addEventListener('click', async () => {
+  const digits = getDigits();
+  clearMsg(qrMessage);
+
+  if (digits.length < 7 || digits.length > 15) {
+    showMsg(qrMessage, 'Numéro invalide : indicatif pays + numéro, chiffres uniquement.', 'error');
+    return;
+  }
+
+  qrBtn.disabled = true;
+  qrBtn.textContent = 'Connexion en cours…';
+  qrRetryRow.classList.remove('show');
+  qrTimer.style.display = 'none';
+  resetQrFrame();
+  stageQr.className = 'stage is-waiting';
+  showMsg(qrMessage, 'Génération du QR code…', 'info');
+
+  try {
+    const res = await fetch('/api/qr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: digits })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showMsg(qrMessage, data.error || 'Erreur inconnue.', 'error');
+      resetQrBtn();
+      stageQr.className = 'stage is-idle';
+      return;
+    }
+
+    if (qrPollHandle) clearInterval(qrPollHandle);
+    qrPollHandle = setInterval(pollForQr, 1800);
+  } catch (err) {
+    showMsg(qrMessage, 'Connexion au serveur impossible. Réessaie.', 'error');
+    resetQrBtn();
+    stageQr.className = 'stage is-idle';
+  }
+});
+
+async function pollForQr() {
+  try {
+    const res = await fetch('/api/qr-status');
+    const data = await res.json();
+    if (data.qr) {
+      clearInterval(qrPollHandle);
+      revealQr(data.qr, data.timestamp);
+    }
+  } catch (err) {}
+}
+
+function revealQr(qrDataUrl, timestamp) {
+  clearMsg(qrMessage);
+  qrFrame.innerHTML = '<img src="' + qrDataUrl + '" alt="QR code" />';
+  resetQrBtn();
+  qrTimer.style.display = 'block';
+
+  const genTime = timestamp ? new Date(timestamp).getTime() : Date.now();
+  startQrCountdown(genTime);
+}
+
+function resetQrFrame() {
+  qrFrame.innerHTML = '<div class="stage is-waiting" id="stageQr"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="stage__core"></div></div>';
+}
+
+function startQrCountdown(genTime) {
+  if (qrCountdownHandle) clearInterval(qrCountdownHandle);
+  qrRetryRow.classList.remove('show');
+
+  function tick() {
+    const elapsed = Math.floor((Date.now() - genTime) / 1000);
+    const remaining = QR_LIFETIME - elapsed;
+    if (remaining <= 0) {
+      qrTimer.textContent = 'QR code expiré';
+      clearInterval(qrCountdownHandle);
+      qrRetryRow.classList.add('show');
+      showMsg(qrMessage, 'Ce QR code a expiré. Génère-en un nouveau.', 'error');
+      return;
+    }
+    qrTimer.textContent = 'Expire dans ' + remaining + 's';
+  }
+  tick();
+  qrCountdownHandle = setInterval(tick, 1000);
+}
+
+function resetQrBtn() {
+  qrBtn.disabled = false;
+  qrBtn.textContent = 'Générer le QR code';
+}
+
+qrRetryBtn.addEventListener('click', () => qrBtn.click());
 </script>
 
 </body>
