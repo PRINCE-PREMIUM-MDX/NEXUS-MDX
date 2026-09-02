@@ -618,7 +618,7 @@
         <span class="trust-chip__label">Multi-appareils</span>
       </div>
     </div>
-  </div>
+    </div>
 
   <div class="console__body">
     <h1>Lier WhatsApp au bot</h1>
@@ -777,9 +777,21 @@ function showMsg(el, text, type) {
 }
 function clearMsg(el) { el.className = 'message'; }
 
-pairBtn.addEventListener('click', async () => {
+function stopCodePolling() {
+  if (codePollHandle) { clearInterval(codePollHandle); codePollHandle = null; }
+  if (codeCountdownHandle) { clearInterval(codeCountdownHandle); codeCountdownHandle = null; }
+}
+
+function resetCodeUI() {
+  pairBtn.disabled = false;
+  pairBtn.textContent = 'Générer le code';
+  stageCode.className = 'stage is-idle';
+}
+
+async function requestPairingCode() {
   const digits = getDigits();
   clearMsg(codeMessage);
+  stopCodePolling();
 
   if (digits.length < 7 || digits.length > 15) {
     showMsg(codeMessage, 'Numéro invalide : indicatif pays + numéro, chiffres uniquement.', 'error');
@@ -791,4 +803,212 @@ pairBtn.addEventListener('click', async () => {
   codePanel.classList.remove('show');
   codeRetryRow.classList.remove('show');
   stageCode.className = 'stage is-waiting';
-  showMsg(codeMessage, 'Recherche du signal
+  showMsg(codeMessage, 'Recherche du signal…', 'info');
+
+  try {
+    const res = await fetch('/api/pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: digits })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showMsg(codeMessage, data.error || 'Erreur lors de la demande du code.', 'error');
+      resetCodeUI();
+      return;
+    }
+
+    showMsg(codeMessage, 'Génération du code en cours…', 'info');
+
+    let attempts = 0;
+    const maxAttempts = 30; // ~30s de polling avant abandon
+
+    codePollHandle = setInterval(async () => {
+      attempts++;
+      try {
+        const r = await fetch('/api/code');
+        const d = await r.json();
+
+        if (d.code) {
+          stopCodePolling();
+          stageCode.className = 'stage is-code';
+          codeValue.textContent = d.code;
+          codePanel.classList.add('show');
+          codeRetryRow.classList.add('show');
+          clearMsg(codeMessage);
+          pairBtn.disabled = false;
+          pairBtn.textContent = 'Générer le code';
+          startCodeCountdown();
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          stopCodePolling();
+          showMsg(codeMessage, 'Le code met trop de temps à arriver. Réessaie.', 'error');
+          resetCodeUI();
+        }
+      } catch (e) {
+        // on ignore les erreurs de polling ponctuelles et on continue d'essayer
+      }
+    }, 1000);
+  } catch (e) {
+    showMsg(codeMessage, 'Impossible de contacter le serveur.', 'error');
+    resetCodeUI();
+  }
+}
+
+function startCodeCountdown() {
+  let remaining = CODE_LIFETIME;
+  codeTimer.textContent = remaining + 's';
+  codeCountdownHandle = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(codeCountdownHandle);
+      codeCountdownHandle = null;
+      codeTimer.textContent = 'Expiré';
+      showMsg(codeMessage, 'Le code a expiré, génère-en un nouveau.', 'error');
+      return;
+    }
+    codeTimer.textContent = remaining + 's';
+  }, 1000);
+}
+
+pairBtn.addEventListener('click', requestPairingCode);
+codeRetryBtn.addEventListener('click', requestPairingCode);
+
+copyBtn.addEventListener('click', async () => {
+  const text = codeValue.textContent.trim();
+  if (!text || text === '----') return;
+  try {
+    await navigator.clipboard.writeText(text.replace(/-/g, ''));
+    const original = copyBtn.textContent;
+    copyBtn.textContent = 'Copié !';
+    setTimeout(() => { copyBtn.textContent = original; }, 1500);
+  } catch (e) {
+    showMsg(codeMessage, 'Impossible de copier automatiquement.', 'error');
+  }
+});
+
+/* ================= QR CODE ================= */
+const qrBtn = document.getElementById('qrBtn');
+const qrMessage = document.getElementById('qrMessage');
+const stageQr = document.getElementById('stageQr');
+const qrFrame = document.getElementById('qrFrame');
+const qrTimer = document.getElementById('qrTimer');
+const qrRetryRow = document.getElementById('qrRetryRow');
+const qrRetryBtn = document.getElementById('qrRetryBtn');
+  let qrPollHandle = null;
+let qrCountdownHandle = null;
+
+function stopQrPolling() {
+  if (qrPollHandle) { clearInterval(qrPollHandle); qrPollHandle = null; }
+  if (qrCountdownHandle) { clearInterval(qrCountdownHandle); qrCountdownHandle = null; }
+}
+
+function resetQrUI() {
+  qrBtn.disabled = false;
+  qrBtn.textContent = 'Générer le QR code';
+  stageQr.className = 'stage is-idle';
+  qrTimer.style.display = 'none';
+}
+
+async function requestQrCode() {
+  const digits = getDigits();
+  clearMsg(qrMessage);
+  stopQrPolling();
+
+  if (digits.length < 7 || digits.length > 15) {
+    showMsg(qrMessage, 'Numéro invalide : indicatif pays + numéro, chiffres uniquement.', 'error');
+    return;
+  }
+
+  qrBtn.disabled = true;
+  qrBtn.textContent = 'Connexion en cours…';
+  qrRetryRow.classList.remove('show');
+  stageQr.className = 'stage is-waiting';
+  const existingImg = qrFrame.querySelector('img');
+  if (existingImg) existingImg.remove();
+  stageQr.style.display = 'flex';
+  showMsg(qrMessage, 'Recherche du signal…', 'info');
+
+  try {
+    const res = await fetch('/api/qr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: digits })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showMsg(qrMessage, data.error || 'Erreur lors de la génération du QR code.', 'error');
+      resetQrUI();
+      return;
+    }
+
+    showMsg(qrMessage, 'Génération du QR code en cours…', 'info');
+
+    let attempts = 0;
+    const maxAttempts = 30;
+
+    qrPollHandle = setInterval(async () => {
+      attempts++;
+      try {
+        const r = await fetch('/api/qr-status');
+        const d = await r.json();
+
+        if (d.qr) {
+          stopQrPolling();
+          stageQr.style.display = 'none';
+          const img = document.createElement('img');
+          img.src = d.qr;
+          img.alt = 'QR code de liaison WhatsApp';
+          img.style.width = '100%';
+          img.style.maxWidth = '260px';
+          img.style.borderRadius = '12px';
+          qrFrame.appendChild(img);
+          qrRetryRow.classList.add('show');
+          clearMsg(qrMessage);
+          qrBtn.disabled = false;
+          qrBtn.textContent = 'Générer le QR code';
+          startQrCountdown();
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          stopQrPolling();
+          showMsg(qrMessage, 'Le QR code met trop de temps à arriver. Réessaie.', 'error');
+          resetQrUI();
+        }
+      } catch (e) {
+        // on ignore les erreurs de polling ponctuelles et on continue d'essayer
+      }
+    }, 1000);
+  } catch (e) {
+    showMsg(qrMessage, 'Impossible de contacter le serveur.', 'error');
+    resetQrUI();
+  }
+}
+
+function startQrCountdown() {
+  let remaining = CODE_LIFETIME;
+  qrTimer.style.display = 'block';
+  qrTimer.textContent = remaining + 's';
+  qrCountdownHandle = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(qrCountdownHandle);
+      qrCountdownHandle = null;
+      qrTimer.textContent = 'Expiré';
+      showMsg(qrMessage, 'Le QR code a expiré, génère-en un nouveau.', 'error');
+      return;
+    }
+    qrTimer.textContent = remaining + 's';
+  }, 1000);
+}
+
+qrBtn.addEventListener('click', requestQrCode);
+qrRetryBtn.addEventListener('click', requestQrCode);
+</script>
+</body>
+</html>
