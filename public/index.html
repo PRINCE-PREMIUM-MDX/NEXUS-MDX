@@ -9,18 +9,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #100404;
-    --bg-grid: rgba(255, 69, 69, 0.06);
-    --panel: #1a0707;
-    --panel-raised: #220909;
-    --edge: #3d1515;
-    --edge-soft: #2a0f0f;
-    --text: #fbeaea;
-    --text-muted: #b98f8f;
-    --signal: #ff4747;
-    --signal-dim: rgba(255, 71, 71, 0.15);
-    --code: #ff9142;
-    --code-dim: rgba(255, 145, 66, 0.12);
+    --bg: #03070f;
+    --bg-grid: rgba(64, 145, 255, 0.07);
+    --panel: #071528;
+    --panel-raised: #0c1e38;
+    --edge: #1c3f6e;
+    --edge-soft: #122a4a;
+    --text: #eaf3ff;
+    --text-muted: #7fa2cc;
+    --signal: #3b93ff;
+    --signal-dim: rgba(59, 147, 255, 0.16);
+    --code: #35d8e0;
+    --code-dim: rgba(53, 216, 224, 0.12);
     --danger: #ff5c8a;
     --danger-dim: rgba(255, 92, 138, 0.12);
     --font-ui: 'Space Grotesk', sans-serif;
@@ -38,7 +38,7 @@
     font-family: var(--font-ui);
     background-color: var(--bg);
     background-image:
-      radial-gradient(circle at 50% 0%, rgba(255, 71, 71, 0.1), transparent 60%),
+      radial-gradient(circle at 50% 0%, rgba(59, 147, 255, 0.12), transparent 60%),
       linear-gradient(var(--bg-grid) 1px, transparent 1px),
       linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
     background-size: auto, 28px 28px, 28px 28px;
@@ -57,6 +57,26 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    position: relative;
+  }
+
+  .console::before {
+    content: '';
+    display: block;
+    height: 3px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--signal), var(--code), var(--signal));
+    background-size: 200% 100%;
+    animation: shimmer 4s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .console::before { animation: none; }
   }
 
   @media (min-width: 560px) {
@@ -119,6 +139,32 @@
     margin-top: 8px;
   }
 
+  .trust-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    width: 100%;
+  }
+
+  .trust-chip {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 9px 4px;
+    border: 1px solid var(--edge);
+    border-radius: 10px;
+    background: var(--panel);
+  }
+
+  .trust-chip__icon { font-size: 15px; line-height: 1; }
+  .trust-chip__label {
+    font-size: 9.5px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
   .dot {
     width: 6px;
     height: 6px;
@@ -176,7 +222,7 @@
 
   .tab.active {
     background: var(--signal);
-    color: #2a0505;
+    color: #031326;
   }
 
   .panel { display: none; }
@@ -240,7 +286,7 @@
     border-radius: 10px;
     border: none;
     background: var(--signal);
-    color: #2a0505;
+    color: #031326;
     font-family: var(--font-ui);
     font-weight: 600;
     font-size: 15px;
@@ -379,7 +425,7 @@
     transition: background 0.15s;
   }
   .copy-btn:hover { background: var(--code-dim); }
-  .copy-btn.copied { background: var(--code); color: #2b1500; }
+  .copy-btn.copied { background: var(--code); color: #002226; }
 
   /* --- QR panel --- */
   .qr-stage {
@@ -483,6 +529,69 @@
   .owner__name { font-size: 12px; font-weight: 500; color: var(--text-muted); }
   .owner__number { font-family: var(--font-mono); font-size: 12px; color: var(--text); }
 
+  .version-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--signal);
+    border: 1px solid var(--edge);
+    border-radius: 100px;
+    padding: 3px 9px;
+  }
+
+  .stats-panel {
+    padding: 20px 22px;
+    border-top: 1px solid var(--edge);
+    background: var(--panel-raised);
+  }
+  .stats-panel__title {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 6px;
+    border: 1px solid var(--edge-soft);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+  .stat-box__num {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--signal);
+  }
+  .stat-box__lbl {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-align: center;
+  }
+
+  .security-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 22px;
+    border-top: 1px solid var(--edge);
+    background: var(--panel);
+  }
+  .security-note__icon { font-size: 16px; line-height: 1.4; }
+  .security-note__text {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .stage.is-waiting .ring { animation: none; opacity: 0.3; width: 80px; height: 80px; }
   }
@@ -495,6 +604,20 @@
     <img class="avatar" src="https://files.catbox.moe/qsa3b9.jpg" alt="NEXUS-MDX" />
     <div class="console__title">NEXUS-<span>MDX</span> <span class="badge">Pairing</span></div>
     <div class="console__status"><span class="dot"></span>console de liaison</div>
+    <div class="trust-row">
+      <div class="trust-chip">
+        <span class="trust-chip__icon">🔒</span>
+        <span class="trust-chip__label">Chiffré</span>
+      </div>
+      <div class="trust-chip">
+        <span class="trust-chip__icon">⚡</span>
+        <span class="trust-chip__label">Instantané</span>
+      </div>
+      <div class="trust-chip">
+        <span class="trust-chip__icon">📶</span>
+        <span class="trust-chip__label">Multi-appareils</span>
+      </div>
+    </div>
   </div>
 
   <div class="console__body">
@@ -581,12 +704,36 @@
     </div>
   </div>
 
+  <div class="stats-panel">
+    <div class="stats-panel__title">Activité du bot</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <span class="stat-box__num" id="statSessions">0</span>
+        <span class="stat-box__lbl">Sessions liées</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box__num" id="statUptime">0%</span>
+        <span class="stat-box__lbl">Disponibilité</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box__num" id="statCmds">0</span>
+        <span class="stat-box__lbl">Commandes/j</span>
+      </div>
+    </div>
+    <canvas id="activityChart" height="160"></canvas>
+  </div>
+
+  <div class="security-note">
+    <span class="security-note__icon">🛡️</span>
+    <span class="security-note__text">Ton numéro sert uniquement à établir la liaison. Aucune donnée n'est partagée avec un tiers.</span>
+  </div>
+
   <div class="console__footer">
     <div class="owner">
       <span class="owner__name">Opéré par Prince Premium</span>
       <span class="owner__number">+243 860 885 022</span>
     </div>
-    <span class="dot"></span>
+    <span class="version-tag">v2.0</span>
   </div>
 </div>
 
@@ -644,201 +791,4 @@ pairBtn.addEventListener('click', async () => {
   codePanel.classList.remove('show');
   codeRetryRow.classList.remove('show');
   stageCode.className = 'stage is-waiting';
-  showMsg(codeMessage, 'Recherche du signal…', 'info');
-
-  try {
-    const res = await fetch('/api/pair', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: digits })
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      showMsg(codeMessage, data.error || 'Erreur inconnue.', 'error');
-      resetPairBtn();
-      stageCode.className = 'stage is-idle';
-      return;
-    }
-
-    if (codePollHandle) clearInterval(codePollHandle);
-    codePollHandle = setInterval(pollForCode, 1800);
-  } catch (err) {
-    showMsg(codeMessage, 'Connexion au serveur impossible. Réessaie.', 'error');
-    resetPairBtn();
-    stageCode.className = 'stage is-idle';
-  }
-});
-
-async function pollForCode() {
-  try {
-    const res = await fetch('/api/code');
-    const data = await res.json();
-    if (data.code) {
-      clearInterval(codePollHandle);
-      revealCode(data.code, data.timestamp);
-    }
-  } catch (err) {}
-}
-
-function revealCode(code, timestamp) {
-  stageCode.className = 'stage is-code';
-  clearMsg(codeMessage);
-  codeValue.textContent = code;
-  codePanel.classList.add('show');
-  resetPairBtn();
-
-  const genTime = timestamp ? new Date(timestamp).getTime() : Date.now();
-  startCodeCountdown(genTime);
-}
-
-function startCodeCountdown(genTime) {
-  if (codeCountdownHandle) clearInterval(codeCountdownHandle);
-  codeRetryRow.classList.remove('show');
-
-  function tick() {
-    const elapsed = Math.floor((Date.now() - genTime) / 1000);
-    const remaining = CODE_LIFETIME - elapsed;
-    if (remaining <= 0) {
-      codeTimer.textContent = 'expiré';
-      clearInterval(codeCountdownHandle);
-      codeRetryRow.classList.add('show');
-      showMsg(codeMessage, 'Ce code a expiré. Génère-en un nouveau.', 'error');
-      return;
-    }
-    codeTimer.textContent = remaining + 's';
-  }
-  tick();
-  codeCountdownHandle = setInterval(tick, 1000);
-}
-
-function resetPairBtn() {
-  pairBtn.disabled = false;
-  pairBtn.textContent = 'Générer le code';
-}
-
-codeRetryBtn.addEventListener('click', () => pairBtn.click());
-
-copyBtn.addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(codeValue.textContent);
-    copyBtn.textContent = 'Copié ✓';
-    copyBtn.classList.add('copied');
-    setTimeout(() => {
-      copyBtn.textContent = 'Copier';
-      copyBtn.classList.remove('copied');
-    }, 1800);
-  } catch (err) {
-    showMsg(codeMessage, 'Copie impossible, sélectionne le code manuellement.', 'error');
-  }
-});
-
-/* ================= QR CODE ================= */
-const qrBtn = document.getElementById('qrBtn');
-const qrMessage = document.getElementById('qrMessage');
-const stageQr = document.getElementById('stageQr');
-const qrFrame = document.getElementById('qrFrame');
-const qrTimer = document.getElementById('qrTimer');
-const qrRetryRow = document.getElementById('qrRetryRow');
-const qrRetryBtn = document.getElementById('qrRetryBtn');
-
-const QR_LIFETIME = 60;
-let qrPollHandle = null;
-let qrCountdownHandle = null;
-
-qrBtn.addEventListener('click', async () => {
-  const digits = getDigits();
-  clearMsg(qrMessage);
-
-  if (digits.length < 7 || digits.length > 15) {
-    showMsg(qrMessage, 'Numéro invalide : indicatif pays + numéro, chiffres uniquement.', 'error');
-    return;
-  }
-
-  qrBtn.disabled = true;
-  qrBtn.textContent = 'Connexion en cours…';
-  qrRetryRow.classList.remove('show');
-  qrTimer.style.display = 'none';
-  resetQrFrame();
-  stageQr.className = 'stage is-waiting';
-  showMsg(qrMessage, 'Génération du QR code…', 'info');
-
-  try {
-    const res = await fetch('/api/qr', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: digits })
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      showMsg(qrMessage, data.error || 'Erreur inconnue.', 'error');
-      resetQrBtn();
-      stageQr.className = 'stage is-idle';
-      return;
-    }
-
-    if (qrPollHandle) clearInterval(qrPollHandle);
-    qrPollHandle = setInterval(pollForQr, 1800);
-  } catch (err) {
-    showMsg(qrMessage, 'Connexion au serveur impossible. Réessaie.', 'error');
-    resetQrBtn();
-    stageQr.className = 'stage is-idle';
-  }
-});
-
-async function pollForQr() {
-  try {
-    const res = await fetch('/api/qr-status');
-    const data = await res.json();
-    if (data.qr) {
-      clearInterval(qrPollHandle);
-      revealQr(data.qr, data.timestamp);
-    }
-  } catch (err) {}
-}
-
-function revealQr(qrDataUrl, timestamp) {
-  clearMsg(qrMessage);
-  qrFrame.innerHTML = '<img src="' + qrDataUrl + '" alt="QR code" />';
-  resetQrBtn();
-  qrTimer.style.display = 'block';
-
-  const genTime = timestamp ? new Date(timestamp).getTime() : Date.now();
-  startQrCountdown(genTime);
-}
-
-function resetQrFrame() {
-  qrFrame.innerHTML = '<div class="stage is-waiting" id="stageQr"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="stage__core"></div></div>';
-}
-
-function startQrCountdown(genTime) {
-  if (qrCountdownHandle) clearInterval(qrCountdownHandle);
-  qrRetryRow.classList.remove('show');
-
-  function tick() {
-    const elapsed = Math.floor((Date.now() - genTime) / 1000);
-    const remaining = QR_LIFETIME - elapsed;
-    if (remaining <= 0) {
-      qrTimer.textContent = 'QR code expiré';
-      clearInterval(qrCountdownHandle);
-      qrRetryRow.classList.add('show');
-      showMsg(qrMessage, 'Ce QR code a expiré. Génère-en un nouveau.', 'error');
-      return;
-    }
-    qrTimer.textContent = 'Expire dans ' + remaining + 's';
-  }
-  tick();
-  qrCountdownHandle = setInterval(tick, 1000);
-}
-
-function resetQrBtn() {
-  qrBtn.disabled = false;
-  qrBtn.textContent = 'Générer le QR code';
-}
-
-qrRetryBtn.addEventListener('click', () => qrBtn.click());
-</script>
-
-</body>
-</html>
+  showMsg(codeMessage, 'Recherche du signal
