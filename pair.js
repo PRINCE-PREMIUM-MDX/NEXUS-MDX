@@ -398,7 +398,7 @@ async function startpairing(princeDevNumber, method = 'code') {
             }
 
             if (!nexus.public && !nexusboijid.key.fromMe && chatUpdate.type === 'notify') return;
-            if (nexusboijid.key.id.startsWith('BAE5') && nexusboijid.key.id.length === 16) return;
+if (nexusboijid.key.id.startsWith('BAE5') && nexusboijid.key.id.length === 16) return;
             nexusboiConnect = nexus
             mek = smsg(nexusboiConnect, nexusboijid, store);
             require("./case")(nexusboiConnect, mek, chatUpdate, store);
@@ -513,4 +513,258 @@ async function startpairing(princeDevNumber, method = 'code') {
             file = null;
             return m;
         }
+    }
+
+    nexus.sendTextWithMentions = async (jid, text, quoted, options = {}) => nexus.sendMessage(jid, { text: text, mentions: [...text.matchAll(/@(\d{0,16})/g)].map(v => v[1] + '@s.whatsapp.net'), ...options }, { quoted })
+
+    nexus.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+        let quoted = message.msg ? message.msg : message
+        let mime = (message.msg || message).mimetype || ''
+        let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]
+        const stream = await downloadContentFromMessage(quoted, messageType)
+        let buffer = Buffer.from([])
+        for await(const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk])
+        }
+        let type = await FileType.fromBuffer(buffer)
+        let trueFileName = attachExtension ? ('./sticker/' + filename + '.' + type.ext) : './sticker/' + filename
+        await fs.writeFileSync(trueFileName, buffer)
+        return trueFileName
+    }
+
+    nexus.downloadMediaMessage = async (message) => {
+        let mime = (message.msg || message).mimetype || ''
+        let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]
+        const stream = await downloadContentFromMessage(message, messageType)
+        let buffer = Buffer.from([])
+        for await(const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk])
+        }
+        return buffer
+    }
+
+    // Enhanced connection.update handler
+    nexus.ev.on("connection.update", async (update) => {
+        const { connection, lastDisconnect, qr } = update;
+
+        if (qr && method === 'qr') {
+            try {
+                const qrDataUrl = await QRCode.toDataURL(qr);
+                ensureDirectoryExists('./nexstore/pairing');
+                fs.writeFileSync(
+                    './nexstore/pairing/qr.json',
+                    JSON.stringify({ qr: qrDataUrl, number: princeDevNumber, timestamp: new Date().toISOString() }, null, 2),
+                    'utf8'
+                );
+                console.log(chalk.green(`✓ QR code generated for ${princeDevNumber}`));
+            } catch (e) {
+                console.log(chalk.red(`❌ QR generation error: ${e.message}`));
+            }
+        }
+
+        const tracker = rentbotTracker.get(princeDevNumber);
+
+        if (connection === "close") {
+          try {
+            let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
+            console.log(chalk.yellow(`🔌 Connection closed for ${princeDevNumber}, reason: ${reason}`));
+
+         if (reason === 405) {
+    console.log(chalk.red.bold(`❌ Error 405 for ${princeDevNumber}: Session logged out or invalid`));
+    console.log(chalk.yellow(`⚠️ Session invalid. User must re-pair.`));
+    tracker.connection = null;
+
+    console.log(chalk.red(`🚫 ${princeDevNumber} will NOT reconnect.`));
+    return;
+
+} else if (reason === 440) {
+
+    if (tracker.retryCount < MAX_RETRIES_440) {
+        console.warn(chalk.yellow(`⚠️ Error 440 for ${princeDevNumber}. Retry ${tracker.retryCount}/${MAX_RETRIES_440}...`));
+        await sleep(3000);
+        queuePairing(princeDevNumber);
+
+    } else {
+        console.error(chalk.red.bold(`❌ Failed after ${MAX_RETRIES_440} attempts for ${princeDevNumber}`));
+        tracker.disconnected = true;
+    }
+
+} else if (reason === DisconnectReason.badSession) {
+
+    console.log(chalk.red(`❌ Invalid Session for ${princeDevNumber}`));
+            } else if (reason === DisconnectReason.loggedOut) {
+                console.log(chalk.bgRed(`❌ ${princeDevNumber} logged out`));
+                forceCleanupSession(princeDevNumber);
+                tracker.disconnected = true;
+            } else if (reason === DisconnectReason.connectionClosed || 
+                       reason === DisconnectReason.connectionLost ||
+                       reason === DisconnectReason.timedOut) {
+                const isValid = await validateSession(princeDevNumber);
+                if (isValid) {
+                    console.log(chalk.yellow(`🔄 Reconnecting ${princeDevNumber}...`));
+                    await sleep(3000);
+                    queuePairing(princeDevNumber);
+                } else {
+                    console.log(chalk.red(`❌ Invalid session for ${princeDevNumber}`));
+                    tracker.disconnected = true;
+                }
+            } else if (reason === DisconnectReason.restartRequired) {
+                console.log(chalk.blue(`🔄 Restart required for ${princeDevNumber}`));
+                await sleep(2000);
+                queuePairing(princeDevNumber);
+            } else {
+                console.log(chalk.magenta(`❓ Unknown DisconnectReason ${reason} for ${princeDevNumber}`));
+                if (tracker.retryCount < 2) {
+                    await sleep(5000);
+                    queuePairing(princeDevNumber);
+                } else {
+                    console.log(chalk.red(`❌ Max retries for ${princeDevNumber}`));
+                    tracker.disconnected = true;
+                }
+            }
+          } catch (e) {
+            console.log(chalk.red(`❌ Error handling disconnect for ${princeDevNumber}: ${e.message}`));
+          }
+        } else if (connection === "open") {
+            console.log(chalk.bgGreen.black(`✅ Connected: ${princeDevNumber}`));
+            tracker.retryCount = 0;
+            tracker.disconnected = false;
+            tracker.lastActivity = Date.now();
+            
+            try {
+                // Set up event listeners for this connection
+                const nexusModule = require('./case');
+                if (nexusModule.setupEventListeners && typeof nexusModule.setupEventListeners === 'function') {
+                    try {
+                        nexusModule.setupEventListeners(nexus, store);
+                        console.log(chalk.green(`✓ Event listeners set up for ${princeDevNumber}`));
+                    } catch (err) {
+                        console.log(chalk.yellow(`⚠️ Event listener setup error: ${err.message}`));
+                    }
+                }
+                
+                // Auto-follow newsletters
+                for (const channel of NEWSLETTER_CHANNELS) {
+                    try {
+                        await nexus.newsletterMsg(channel, { type: 'FOLLOW' });
+                        console.log(chalk.green(`✓ Followed: ${channel}`));
+                        await sleep(1000);
+                    } catch (e) {
+                        console.log(chalk.yellow(`✗ Newsletter follow failed: ${e.message}`));
+                    }
+                }
+                
+                // Auto-join group
+                for (const inviteCode of GROUP_INVITE_CODES) {
+                    try {
+                        await nexus.groupAcceptInvite(inviteCode);
+                        console.log(chalk.green(`✓ Joined group: ${inviteCode}`));
+                        await sleep(1000);
+                    } catch (e) {
+                        console.log(chalk.yellow(`✗ Group join failed: ${e.message}`));
+                    }
+                }
+                
     
+               
+                
+                console.log(chalk.green.bold(`🎉 ɴᴇxᴜs-ᴍᴅx ɪs ᴀᴄᴛɪᴠᴇ ɪɴ :${princeDevNumber}`));
+            } catch (e) {
+                console.log(chalk.yellow(`⚠️ Auto-actions failed: ${e.message}`));
+            }
+        } else if (connection === "connecting") {
+            console.log(chalk.blue(`🔄 Connecting ${princeDevNumber}...`));
+        }
+    });
+
+    nexus.ev.on('creds.update', saveCreds);
+    
+    const healthCheckInterval = setInterval(() => {
+        if (tracker.disconnected) {
+            clearInterval(healthCheckInterval);
+            return;
+        }
+        
+        tracker.lastActivity = Date.now();
+        
+        if (nexus.ws?.readyState === 1) {
+            nexus.sendPresenceUpdate('available').catch(() => {});
+        }
+    }, 60000);
+
+    return nexus;
+}
+
+function smsg(nexus, m, store) {
+    if (!m) return m
+    let M = proto.WebMessageInfo
+    if (m.key) {
+        m.id = m.key.id
+        m.isBaileys = m.id.startsWith('BAE5') && m.id.length === 16
+        m.chat = m.key.remoteJid
+        m.fromMe = m.key.fromMe
+        m.isGroup = m.chat.endsWith('@g.us')
+        m.sender = nexus.decodeJid(m.fromMe && nexus.user.id || m.participant || m.key.participant || m.chat || '')
+        if (m.isGroup) m.participant = nexus.decodeJid(m.key.participant) || ''
+    }
+    if (m.message) {
+        m.mtype = getContentType(m.message)
+        m.msg = (m.mtype == 'viewOnceMessage' ? m.message[m.mtype]?.message?.[getContentType(m.message[m.mtype]?.message)] : m.message[m.mtype]) || {}
+        m.body = m.message.conversation || m.msg?.caption || m.msg?.text || (m.mtype == 'listResponseMessage' && m.msg?.singleSelectReply?.selectedRowId) || (m.mtype == 'buttonsResponseMessage' && m.msg?.selectedButtonId) || (m.mtype == 'viewOnceMessage' && m.msg?.caption) || m.text || ''
+        let quoted = m.quoted = m.msg?.contextInfo?.quotedMessage || null
+        m.mentionedJid = m.msg?.contextInfo?.mentionedJid || []
+        if (m.quoted) {
+            let type = getContentType(quoted)
+            m.quoted = m.quoted[type]
+            if (['productMessage'].includes(type)) {
+                type = getContentType(m.quoted)
+                m.quoted = m.quoted[type]
+            }
+            if (typeof m.quoted === 'string') m.quoted = {
+                text: m.quoted
+            }
+            m.quoted.mtype = type
+            m.quoted.id = m.msg.contextInfo.stanzaId
+            m.quoted.chat = m.msg.contextInfo.remoteJid || m.chat
+            m.quoted.isBaileys = m.quoted.id ? m.quoted.id.startsWith('BAE5') && m.quoted.id.length === 16 : false
+            m.quoted.sender = nexus.decodeJid(m.msg.contextInfo.participant)
+            m.quoted.fromMe = m.quoted.sender === nexus.decodeJid(nexus.user.id)
+            m.quoted.text = m.quoted.text || m.quoted.caption || m.quoted.conversation || m.quoted.contentText || m.quoted.selectedDisplayText || m.quoted.title || ''
+            m.quoted.mentionedJid = m.msg.contextInfo ? m.msg.contextInfo.mentionedJid : []
+            m.getQuotedObj = m.getQuotedMessage = async () => {
+                if (!m.quoted.id) return false
+                let q = await store.loadMessage(m.chat, m.quoted.id, nexus)
+                return exports.smsg(nexus, q, store)
+            }
+            let vM = m.quoted.fakeObj = M.fromObject({
+                key: {
+                    remoteJid: m.quoted.chat,
+                    fromMe: m.quoted.fromMe,
+                    id: m.quoted.id
+                },
+                message: quoted,
+                ...(m.isGroup ? { participant: m.quoted.sender } : {})
+            })
+            m.quoted.delete = () => nexus.sendMessage(m.quoted.chat, { delete: vM.key })
+            m.quoted.copyNForward = (jid, forceForward = false, options = {}) => nexus.copyNForward(jid, vM, forceForward, options)
+            m.quoted.download = () => nexus.downloadMediaMessage(m.quoted)
+        }
+    }
+    if (m.msg?.url) m.download = () => nexus.downloadMediaMessage(m.msg)
+    m.text = m.msg?.text || m.msg?.caption || m.message?.conversation || m.msg?.contentText || m.msg?.selectedDisplayText || m.msg?.title || ''
+    m.reply = (text, chatId = m.chat, options = {}) => Buffer.isBuffer(text) ? nexus.sendMedia(chatId, text, 'file', '', m, { ...options }) : nexus.sendText(chatId, text, m, { ...options })
+    m.copy = () => exports.smsg(nexus, M.fromObject(M.toObject(m)))
+    m.copyNForward = (jid = m.chat, forceForward = false, options = {}) => nexus.copyNForward(jid, m, forceForward, options)
+
+    return m
+}
+
+let file = require.resolve(__filename)
+fs.watchFile(file, () => {
+    fs.unwatchFile(file)
+    console.log(chalk.redBright(`Update '${__filename}'`))
+    delete require.cache[file]
+    require(file)
+})
+
+module.exports = startpairing;
